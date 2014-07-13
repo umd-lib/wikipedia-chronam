@@ -1,19 +1,25 @@
 import xml.etree.ElementTree as ET
 import re
 import sys
+import os
 
 if sys.version_info[0] < 3:
     raise Exception("This script requires Python 3")
     
-#a.    The Wikipedia page
-#b.    The revision ID (for auditability purposes)
-#c.    The Wikipedia editor account name (or IP address for anonymous editors) making the edit
-#d.    The timestamp of the edit
-#e.    A flag indicating whether the Chronicling America edit was an addition or a deletion
-#f.    Edit summary (the user-entered explanation for the edit)
-#g.    A list of the unique Chronicling America citation URL(s)
-#h.    Categories of the page
-
+def main():
+    filenameParam = sys.argv[1]
+    
+    # single file
+    if os.path.isfile(filenameParam):
+        parse(filenameParam)
+        
+    # directory to be traversed
+    elif os.path.isdir(filenameParam):
+        for (dirpath, dirnames, filenames) in os.walk(filenameParam):
+            for name in filenames:
+                filename = os.path.join(dirpath, name)
+                parse(filename)
+    
 def parse(filename=None):
     tree = ET.parse(filename)
     root = tree.getroot()
@@ -98,4 +104,4 @@ def parseRevision(revision):
     
     return(ret)
     
-parse('pages/A/Abigail_Kuaihelani_Campbell.xml')
+main()
