@@ -2,6 +2,8 @@ import xml.etree.ElementTree as ET
 import re
 import sys
 import os
+import csv
+from urllib.parse import quote
 
 if sys.version_info[0] < 3:
     raise Exception("This script requires Python 3")
@@ -9,18 +11,22 @@ if sys.version_info[0] < 3:
 def main():
     filenameParam = sys.argv[1]
     
-    # single file
-    if os.path.isfile(filenameParam):
-        parse(filenameParam)
-        
-    # directory to be traversed
-    elif os.path.isdir(filenameParam):
-        for (dirpath, dirnames, filenames) in os.walk(filenameParam):
-            for name in filenames:
-                filename = os.path.join(dirpath, name)
-                parse(filename)
+    with open('edits.csv', 'w') as csvfileEdits:
+        csvEdits = csv.writer(csvfileEdits, quoting=csv.QUOTE_ALL)
+        csvEdits.writerow(['Page','Page Link','Revision ID','Editor','Timestamp','Comment','#Additions',' #Deletions', 'URLs','Categories'])
+
+        # single file
+        if os.path.isfile(filenameParam):
+            parse(filenameParam, csvEdits)
+            
+        # directory to be traversed
+        elif os.path.isdir(filenameParam):
+            for (dirpath, dirnames, filenames) in os.walk(filenameParam):
+                for name in filenames:
+                    filename = os.path.join(dirpath, name)
+                    parse(filename, csvEdits)
     
-def parse(filename=None):
+def parse(filename=None, csvEdits=None):
     tree = ET.parse(filename)
     root = tree.getroot()
 
@@ -48,18 +54,22 @@ def parse(filename=None):
                     editor = revParsed['ip']
                 else:
                     editor = '?'
+
+                if csvEdits:
+                    row = [                    
+                           title,
+                           'http://en.wikipedia.org/wiki/' + quote(title.replace(' ','_')),
+                           revParsed['revid'],
+                           editor,
+                           revParsed['timestamp'],
+                           revParsed['comment'],
+                           str(len(additions)),
+                           str(len(deletions)),
+                           " | ".join(revParsed['url']),
+                           " | ".join(revParsed['category']),
+                           ]
+                    csvEdits.writerow(row)
                     
-                print('---')
-                print('filename', filename)
-                print('revid', revParsed['revid'])
-                print('editor', editor)
-                print('timestamp', revParsed['timestamp'])
-                print('additions', additions)
-                print('deletions', deletions)
-                print('comment', revParsed['comment'])
-                print('url', revParsed['url'])
-                print('category', revParsed['category'])
-                
             revParsedPrev = revParsed
 
 def parseRevision(revision):
