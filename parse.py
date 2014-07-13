@@ -26,38 +26,41 @@ def parse(filename=None):
 
     page = root.find('./{http://www.mediawiki.org/xml/export-0.8/}page')
     
-    title = page.find('./{http://www.mediawiki.org/xml/export-0.8/}title').text
-    print("Parsing '{0}'".format(title))
-  
-    # setup the previous revision (there is none at this point)
-    revParsedPrev = {'url' : set()}
+    if page:
+        title = page.find('./{http://www.mediawiki.org/xml/export-0.8/}title').text
+        print("Parsing '{0}'".format(title))
+      
+        # setup the previous revision (there is none at this point)
+        revParsedPrev = {'url' : set()}
+        
+        for revision in page.findall('./{http://www.mediawiki.org/xml/export-0.8/}revision'):
+            # Extract desired elements from a single revision
+            revParsed = parseRevision(revision)
     
-    for revision in page.findall('./{http://www.mediawiki.org/xml/export-0.8/}revision'):
-        # Extract desired elements from a single revision
-        revParsed = parseRevision(revision)
-
-        # Check for URL changes
-        if revParsedPrev['url'] != revParsed['url']:
-            additions = revParsed['url'] - revParsedPrev['url']
-            deletions = revParsedPrev['url'] - revParsed['url']
-
-            if 'username' in revParsed:
-                editor = revParsed['username']
-            else:
-                editor = revParsed['ip']
+            # Check for URL changes
+            if revParsedPrev['url'] != revParsed['url']:
+                additions = revParsed['url'] - revParsedPrev['url']
+                deletions = revParsedPrev['url'] - revParsed['url']
+    
+                if 'username' in revParsed:
+                    editor = revParsed['username']
+                elif 'ip' in revParsed:
+                    editor = revParsed['ip']
+                else:
+                    editor = '?'
+                    
+                print('---')
+                print('filename', filename)
+                print('revid', revParsed['revid'])
+                print('editor', editor)
+                print('timestamp', revParsed['timestamp'])
+                print('additions', additions)
+                print('deletions', deletions)
+                print('comment', revParsed['comment'])
+                print('url', revParsed['url'])
+                print('category', revParsed['category'])
                 
-            print('---')
-            print('filename', filename)
-            print('revid', revParsed['revid'])
-            print('editor', editor)
-            print('timestamp', revParsed['timestamp'])
-            print('additions', additions)
-            print('deletions', deletions)
-            print('comment', revParsed['comment'])
-            print('url', revParsed['url'])
-            print('category', revParsed['category'])
-            
-        revParsedPrev = revParsed
+            revParsedPrev = revParsed
 
 def parseRevision(revision):
     '''Parse a single revision for the desired elements'''
@@ -95,12 +98,13 @@ def parseRevision(revision):
         elif (child.tag == '{http://www.mediawiki.org/xml/export-0.8/}text'):
             text = child.text
 
-            # Extract Chronicling America URLs and Page Categories           
-            for match in re.findall("(http://chroniclingamerica.loc.gov/[^\s\|]+)|(?:\[\[Category:(.*?)\]\])", text,re.MULTILINE):
-                if match[0]:
-                    ret['url'].add(match[0])
-                elif match[1]:
-                    ret['category'].append(match[1])
+            if text:
+                # Extract Chronicling America URLs and Page Categories           
+                for match in re.findall("(http://chroniclingamerica.loc.gov/[^\s\|]+)|(?:\[\[Category:(.*?)\]\])", text,re.MULTILINE):
+                    if match[0]:
+                        ret['url'].add(match[0])
+                    elif match[1]:
+                        ret['category'].append(match[1])
     
     return(ret)
     
