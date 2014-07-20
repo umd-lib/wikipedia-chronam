@@ -12,3 +12,7 @@ Compile a number of statistics on how Chronicling America is used by Wikipedia e
 [export.py](export.py) - export page revision history from Wikipedia using 
 
 [parse.py](parse.py) - extract revision statistics per page (edits.csv and editors.csv)
+
+## License
+
+[CC0](http://creativecommons.org/publicdomain/zero/1.0/)
