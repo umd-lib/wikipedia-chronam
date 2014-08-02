@@ -12,21 +12,36 @@ if sys.version_info[0] < 3:
     
 def main():
     filenameParam = sys.argv[1]
+
+    # Determine the type of input, single file or directory
+    isSingle = os.path.isfile(filenameParam)
+    isDir = os.path.isdir(filenameParam)
     
-    with open('edits.csv', 'w', 1) as csvfileEdits:
+    # Determine the name of ouput files for edits and editors
+    if isSingle:
+        base = os.path.basename(filenameParam)
+        filename = os.path.splitext(base)
+        
+        editsFilename = os.path.join('edits', filename[0]+'.csv')
+        editorsFilename = os.path.join('editors', filename[0]+'.csv')
+    else:
+        editsFilename = 'edits.csv'
+        editorsFilename = 'editors.csv'
+            
+    with open(editsFilename, 'w', 1) as csvfileEdits:
         csvEdits = csv.writer(csvfileEdits, quoting=csv.QUOTE_ALL)
         csvEdits.writerow(['Page','Page Link','Revision ID','Editor','Timestamp','Comment','#Additions',' #Deletions', 'URLs','Categories'])
 
-        with open('editors.csv', 'w', 1) as csvfileEditors:
+        with open(editorsFilename, 'w', 1) as csvfileEditors:
             csvEditors = csv.writer(csvfileEditors, quoting=csv.QUOTE_ALL)
             csvEditors.writerow(['Page','Page Link','Editor','Additions', 'Deletions', 'Total Additions', 'Total Deletions', 'Percent Contribution'])
 
             # single file
-            if os.path.isfile(filenameParam):
+            if isSingle:
                 parse(filenameParam, csvEdits, csvEditors)
        
             # directory to be traversed
-            elif os.path.isdir(filenameParam):
+            elif isDir:
                 for (dirpath, dirnames, filenames) in os.walk(filenameParam):
                     for name in filenames:
                         filename = os.path.join(dirpath, name)
