@@ -143,7 +143,7 @@ def parseRevision(revision):
            'revid' : None,
            'timestamp' : None,
            'comment' : None,
-           'text' : None,
+           'text' : '',
            'url' : set(),
            'category' : [],
            }
